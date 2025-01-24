@@ -12,7 +12,7 @@ public partial class Size
 
     public int Quantity { get; set; }
 
-    public decimal StepQuantity { get; set; }
+    public int StepQuantity { get; set; }
 
     public decimal Price { get; set; }
 

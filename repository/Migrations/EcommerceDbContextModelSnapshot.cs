@@ -78,9 +78,9 @@ namespace RepositoryAPI.Migrations
                         .HasColumnType("int")
                         .HasColumnName("size_id");
 
-                    b.Property<bool>("Statuse")
+                    b.Property<bool>("status")
                         .HasColumnType("bit")
-                        .HasColumnName("statuse");
+                        .HasColumnName("status");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int")

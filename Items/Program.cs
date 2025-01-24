@@ -84,7 +84,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add authorization policies (if needed)
-builder.Services.AddAuthorization();
+//builder.Services.AddAuthorization();
 
 // Build the application
 var app = builder.Build();

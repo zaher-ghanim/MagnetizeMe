@@ -59,7 +59,7 @@ public partial class EcommerceDbContext : DbContext
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("price");
             entity.Property(e => e.SizeId).HasColumnName("size_id");
-            entity.Property(e => e.Statuse).HasColumnName("statuse");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Size).WithMany(p => p.Orders)
