@@ -43,7 +43,8 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
-}); builder.Services.AddSwaggerGen();
+});
+builder.Services.AddSwaggerGen();
 
 // Register DbContext with the connection string from appsettings.json
 builder.Services.AddDbContext<EcommerceDbContext>(options =>

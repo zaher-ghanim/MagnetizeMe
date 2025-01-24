@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace RepositoryAPI.Models;
+﻿namespace RepositoryAPI.Models;
 
 public partial class Size
 {
@@ -19,7 +16,7 @@ public partial class Size
 
     public decimal Price { get; set; }
 
-    public virtual Item Item { get; set; } = null!;
+    public virtual Item? Item { get; set; } = null!;
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }
