@@ -1,4 +1,5 @@
 ﻿using ItemsAPI.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RepositoryAPI.Models;
@@ -7,6 +8,8 @@ namespace ItemsAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "AdminOnly")]
+
     public class ItemsController : ControllerBase
     {
         private readonly IItemsServices _itemsServices;
@@ -18,6 +21,7 @@ namespace ItemsAPI.Controllers
 
         // GET: api/items
         [HttpGet]
+
         public async Task<IEnumerable<Item>> GetAll()
         {
             List<Item> items = await this._itemsServices.GetItems();
