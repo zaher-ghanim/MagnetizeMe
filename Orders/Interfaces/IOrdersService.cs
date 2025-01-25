@@ -18,5 +18,7 @@ namespace Users.Interfaces
         Task<List<Order>> GetOrdersByStatus(bool status);
         Task<bool> UpdateOrderStatus(int orderId, bool status);
         Task<bool> GetOrderStatus(int orderId);
+
+        Task<(bool Success, string Message, string UploadPath)> CreateOrderWithImages(CreateOrderWithImagesDto dto, int userId);
     }
 }

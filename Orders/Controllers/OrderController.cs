@@ -34,67 +34,16 @@ namespace OrdersAPI.Controllers
                 return BadRequest("Invalid User ID in claims.");
             }
 
-            if (dto.Images == null || dto.Images.Count == 0)
-            {
-                return BadRequest("No images were uploaded.");
-            }
-
-            string username = await _orderService.GetUsernameFromUserId(userId); // Use the userId from claims
-            if (string.IsNullOrEmpty(username))
-            {
-                return BadRequest("Invalid user ID.");
-            }
-
-            Size size = await _orderService.GetOrdersSize(dto.Order.SizeId);
-            int Images_Qty = dto.Images.Count;
-            int step_qty = size.StepQuantity;
-            int min_qty = size.Quantity;
-            decimal actual_price = size.Price;
-            decimal price = Math.Ceiling((decimal)Images_Qty / min_qty) * actual_price;
-
-            Order newOrder = new Order()
-            {
-                UserId = userId, // Use the userId from claims
-                SizeId = dto.Order.SizeId,
-                Address = dto.Order.Address,
-                Phone = dto.Order.Phone,
-                Qty = dto.Images.Count,
-                Price = price
-            };
-
-            var result = await _orderService.CreateOrder(newOrder);
+            // Call the service method
+            var result = await _orderService.CreateOrderWithImages(dto, userId);
             if (!result.Success)
             {
                 return BadRequest(result.Message);
             }
 
-            // Create the upload path using the username and order ID
-            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", username, result.orderid.ToString());
-
-            // Create the directory if it doesn't exist
-            if (!Directory.Exists(uploadPath))
-            {
-                Directory.CreateDirectory(uploadPath);
-            }
-
-            int i = 1;
-            // Loop through each uploaded file and save it to the constructed path
-            foreach (var file in dto.Images)
-            {
-                if (file.Length > 0)
-                {
-                    var filePath = Path.Combine(uploadPath, i.ToString() + "-" + file.FileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    i++;
-                }
-            }
-
-            // Return success message
-            return Ok($"Order created and images uploaded to {uploadPath}");
+            return Ok($"Order created and images uploaded to {result.UploadPath}");
         }
+
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOnly")]

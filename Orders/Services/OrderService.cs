@@ -9,10 +9,12 @@ namespace OrdersAPI.Services
     public class OrderService : IOrdersService
     {
         private readonly EcommerceDbContext _context;
+      
 
         public OrderService(EcommerceDbContext context)
         {
             _context = context;
+          
         }
 
         public async Task<(int orderid,bool Success, string Message)> CreateOrder(Order order)
@@ -109,6 +111,73 @@ namespace OrdersAPI.Services
             }
 
             return order.Status;
+        }
+
+        public async Task<(bool Success, string Message, string UploadPath)> CreateOrderWithImages(CreateOrderWithImagesDto dto, int userId)
+        {
+            if (dto.Images == null || dto.Images.Count == 0)
+            {
+                return (false, "No images were uploaded.", null);
+            }
+
+            string username = await GetUsernameFromUserId(userId);
+            if (string.IsNullOrEmpty(username))
+            {
+                return (false, "Invalid user ID.", null);
+            }
+
+            Size size = await GetOrdersSize(dto.Order.SizeId);
+            if (size == null)
+            {
+                return (false, "Invalid size ID.", null);
+            }
+
+            int Images_Qty = dto.Images.Count;
+            int min_qty = size.Quantity;
+            decimal actual_price = size.Price;
+            decimal price = Math.Ceiling((decimal)Images_Qty / min_qty) * actual_price;
+
+            Order newOrder = new Order()
+            {
+                UserId = userId,
+                SizeId = dto.Order.SizeId,
+                Address = dto.Order.Address,
+                Phone = dto.Order.Phone,
+                Qty = dto.Images.Count,
+                Price = price
+            };
+
+            var result = await CreateOrder(newOrder);
+            if (!result.Success)
+            {
+                return (false, result.Message, null);
+            }
+
+            // Create the upload path using the username and order ID
+            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", username, result.orderid.ToString());
+
+            // Create the directory if it doesn't exist
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            int i = 1;
+            // Loop through each uploaded file and save it to the constructed path
+            foreach (var file in dto.Images)
+            {
+                if (file.Length > 0)
+                {
+                    var filePath = Path.Combine(uploadPath, i.ToString() + "-" + file.FileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    i++;
+                }
+            }
+
+            return (true, "Order created and images uploaded successfully.", uploadPath);
         }
     }
 }
