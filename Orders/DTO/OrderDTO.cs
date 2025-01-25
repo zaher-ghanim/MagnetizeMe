@@ -9,7 +9,7 @@ namespace RepositoryAPI.Models.OrdersDTO
 {
     public class OrderDTO
     {
-        public int UserId { get; set; }
+        //public int UserId { get; set; }
 
         public int SizeId { get; set; }
 

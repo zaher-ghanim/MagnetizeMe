@@ -16,5 +16,7 @@ namespace Users.Interfaces
         //+Jess > To be implemented later if we have time
         Task<List<Order>> GetOrdersByUsername(string username);
         Task<List<Order>> GetOrdersByStatus(bool status);
+        Task<bool> UpdateOrderStatus(int orderId, bool status);
+        Task<bool> GetOrderStatus(int orderId);
     }
 }

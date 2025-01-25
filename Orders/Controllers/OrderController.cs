@@ -2,13 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using RepositoryAPI.Models;
 using RepositoryAPI.Models.OrdersDTO;
+using System.Security.Claims;
 using Users.Interfaces;
 
 namespace OrdersAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "AdminOnly")]
+    //[Authorize(Policy = "AdminOnly")]
 
     public class OrderController : Controller
     {
@@ -26,23 +27,35 @@ namespace OrdersAPI.Controllers
         //}
 
 
-
         [HttpPost("CreateOrderWithImages")]
         [Consumes("multipart/form-data")]
+        [Authorize]
         public async Task<IActionResult> CreateOrderWithImages([FromForm] CreateOrderWithImagesDto dto)
         {
+            // Extract UserId from the claims
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+            if (userIdClaim == null)
+            {
+                return BadRequest("User ID not found in claims.");
+            }
+
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return BadRequest("Invalid User ID in claims.");
+            }
+
             if (dto.Images == null || dto.Images.Count == 0)
             {
                 return BadRequest("No images were uploaded.");
             }
 
-            string username = await _orderService.GetUsernameFromUserId(dto.Order.UserId);
+            string username = await _orderService.GetUsernameFromUserId(userId); // Use the userId from claims
             if (string.IsNullOrEmpty(username))
             {
                 return BadRequest("Invalid user ID.");
             }
 
-            Size size = _orderService.GetOrdersSize(dto.Order.SizeId).Result;
+            Size size = await _orderService.GetOrdersSize(dto.Order.SizeId);
             int Images_Qty = dto.Images.Count;
             int step_qty = size.StepQuantity;
             int min_qty = size.Quantity;
@@ -51,13 +64,12 @@ namespace OrdersAPI.Controllers
 
             Order newOrder = new Order()
             {
-                UserId = dto.Order.UserId,
+                UserId = userId, // Use the userId from claims
                 SizeId = dto.Order.SizeId,
                 Address = dto.Order.Address,
                 Phone = dto.Order.Phone,
                 Qty = dto.Images.Count,
                 Price = price
-
             };
 
             var result = await _orderService.CreateOrder(newOrder);
@@ -69,20 +81,18 @@ namespace OrdersAPI.Controllers
             // Create the upload path using the username and order ID
             var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", username, result.orderid.ToString());
 
-
             // Create the directory if it doesn't exist
             if (!Directory.Exists(uploadPath))
             {
                 Directory.CreateDirectory(uploadPath);
             }
+
             int i = 1;
             // Loop through each uploaded file and save it to the constructed path
             foreach (var file in dto.Images)
             {
                 if (file.Length > 0)
                 {
-                    //string dimension = size.Dimension;
-
                     var filePath = Path.Combine(uploadPath, i.ToString() + "-" + file.FileName);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -97,6 +107,7 @@ namespace OrdersAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         //[Authorize(Policy = "AdminOnly")] // Only admins can delete users
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -110,6 +121,7 @@ namespace OrdersAPI.Controllers
 
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetOrderById(int id)
         {
             var order = await _orderService.GetOrderById(id);
@@ -122,7 +134,7 @@ namespace OrdersAPI.Controllers
 
 
         [HttpGet]
-        //[Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetOrders()
         {
             var users = await _orderService.GetOrders();
@@ -132,7 +144,7 @@ namespace OrdersAPI.Controllers
 
 
         [HttpGet("GetOrders_ByStatus")]
-        //[Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetOrdersByStatus(bool finished)
         {
             var orders = await _orderService.GetOrdersByStatus(finished);
@@ -140,10 +152,41 @@ namespace OrdersAPI.Controllers
         }
 
         [HttpGet("GetOrders_ByUsername")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetOrdersByUsername(string username)
         {
             var orders = await _orderService.GetOrdersByUsername(username);
             return Ok(orders);
+        }
+
+        [HttpPut("UpdateOrderStatus/{orderId}")]
+
+        [Authorize(Policy = "AdminOnly")]
+
+        public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] bool status)
+        {
+            var result = await _orderService.UpdateOrderStatus(orderId, status);
+            if (!result)
+            {
+                return NotFound("Order not found.");
+            }
+
+            return Ok("Order status updated successfully.");
+        }
+
+        [Authorize(Policy = "AdminOnly")]
+        [HttpGet("GetOrderStatus/{orderId}")]
+        public async Task<IActionResult> GetOrderStatus(int orderId)
+        {
+            try
+            {
+                var status = await _orderService.GetOrderStatus(orderId);
+                return Ok(new { OrderId = orderId, Status = status });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
     }

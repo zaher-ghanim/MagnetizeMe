@@ -85,5 +85,30 @@ namespace OrdersAPI.Services
             }
             return size;
         }
+        public async Task<bool> UpdateOrderStatus(int orderId, bool status)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+            {
+                return false; // Order not found
+            }
+
+            order.Status = status;
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+
+            return true; // Status updated successfully
+        }
+
+        public async Task<bool> GetOrderStatus(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+            {
+                throw new KeyNotFoundException("Order not found."); // Or return a default value
+            }
+
+            return order.Status;
+        }
     }
 }
