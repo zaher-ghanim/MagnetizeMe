@@ -9,7 +9,6 @@ namespace OrdersAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize(Policy = "AdminOnly")]
 
     public class OrderController : Controller
     {
@@ -18,15 +17,6 @@ namespace OrdersAPI.Controllers
         {
             _orderService = orderService;
         }
-
-        //[HttpPost("TestFileUpload")]
-        //[Consumes("multipart/form-data")]
-        //public IActionResult TestFileUpload([FromForm] List<IFormFile> files)
-        //{
-        //    return Ok(new { Count = files.Count });
-        //}
-
-
         [HttpPost("CreateOrderWithImages")]
         [Consumes("multipart/form-data")]
         [Authorize]
@@ -108,7 +98,6 @@ namespace OrdersAPI.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOnly")]
-        //[Authorize(Policy = "AdminOnly")] // Only admins can delete users
         public async Task<IActionResult> DeleteUser(int id)
         {
             var result = await _orderService.DeleteOrder(id);

@@ -41,7 +41,6 @@ internal class Program
                 Format = "binary"
             });
 
-            // Added by zaher
             // Add JWT Authentication to Swagger
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
@@ -75,7 +74,6 @@ internal class Program
 
         IServiceCollection serviceCollection = builder.Services.AddScoped<IOrdersService, OrderService>();
 
-        // Added by zaher
         // Configure JWT Authentication
         var jwtSettings = builder.Configuration.GetSection("Jwt");
         var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
@@ -102,7 +100,6 @@ internal class Program
                 ValidIssuer = jwtSettings["Issuer"],
                 ValidAudience = jwtSettings["Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                //NameClaimType = JwtRegisteredClaimNames.Sub // Map the Sub claim to the Name property
             };
         });
 
@@ -139,29 +136,4 @@ internal class Program
 
         app.Run();
     }
-
-    //public static IHostBuilder CreateHostBuilder(string[] args) =>
-    //   Host.CreateDefaultBuilder(args)
-    //       .ConfigureWebHostDefaults(webBuilder =>
-    //       {
-    //           webBuilder.ConfigureServices(services =>
-    //           {
-    //               services.AddSwaggerGen(c =>
-    //               {
-    //                   c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
-    //               });
-    //           });
-
-    //           webBuilder.Configure(app =>
-    //           {
-    //               app.UseSwagger();
-    //               app.UseSwaggerUI(c =>
-    //               {
-    //                   // Configure Swagger UI options here
-    //                   c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-    //                   c.InjectJavascript("/swagger-ui/custom.js");
-    //               });
-    //           });
-    //       });
-
 }
